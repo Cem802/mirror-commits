@@ -1,0 +1,16 @@
+@echo off
+echo Creating virtual environment...
+python -m venv venv
+
+echo Installing dependencies...
+venv\Scripts\pip install -r requirements.txt
+
+echo Activating virtual environment...
+call venv\Scripts\activate
+
+echo Running setup...
+python setup.py
+
+echo Setup complete.
+echo Deactivating environment...
+deactivate
