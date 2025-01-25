@@ -14,9 +14,33 @@ Mirror Commits is a Python tool for developers who work with squash merge workfl
 - Python 3.7+
 - GitPython library
 
-Install dependencies:
+### Virtual Environment Setup (Recommended)
+To prevent conflicts with your system Python environment, create and activate a virtual environment:
+
+1. Create a virtual environment:
+```bash
+python3 -m venv venv
+```
+
+2. Activate the virtual environment:
+
+- On macOS/Linux:
+```bash
+source venv/bin/activate
+```
+- On Windows:
+```cmd
+venv\Scripts\activate
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
+```
+
+4. To deactivate the virtual environment after usage:
+```bash
+deactivate
 ```
 
 ## Configuration
