@@ -14,12 +14,40 @@ Mirror Commits is a Python tool for developers who work with squash merge workfl
 - Python 3.7+
 - GitPython library
 
-### Virtual Environment Setup (Recommended)
-To prevent conflicts with your system Python environment, create and activate a virtual environment:
+### Automated Setup
+To simplify the setup process, use the provided automation scripts.
+
+#### macOS/Linux:
+Run the following Bash script:
+```bash
+./setup.sh
+```
+
+#### Windows:
+Run the following Batch script:
+```cmd
+setup.bat
+```
+
+These scripts will:
+
+1. Create and activate a virtual environment.
+2. Install the necessary dependencies.
+3. Run the setup.py script.
+
+### Manual Virtual Environment Setup (Optional)
+To prevent conflicts with your system Python environment, create and activate a virtual environment manually:
 
 1. Create a virtual environment:
+
+- macOS/Linux:
 ```bash
 python3 -m venv venv
+```
+
+-Windows:
+```cmd
+python -m venv venv
 ```
 
 2. Activate the virtual environment:
@@ -28,6 +56,7 @@ python3 -m venv venv
 ```bash
 source venv/bin/activate
 ```
+
 - On Windows:
 ```cmd
 venv\Scripts\activate
@@ -43,44 +72,16 @@ pip install -r requirements.txt
 deactivate
 ```
 
-## Configuration
-1. Clone the original repository:
-```bash
-git clone https://github.com/yourusername/original-repo.git
-```
-
-2. Create a private repository to host mirrored commits:
-```bash
-git clone https://github.com/yourusername/fake-repo.git
-```
-
-3. Set the paths in the scripts:
-- REPO_PATH: Path to the original repository.
-- FAKE_REPO_PATH: Path to the fake repository.
-
-4.Add a post-push Git hook:
-```bash
-ln -s /path/to/post_push.py .git/hooks/post-push
-```
-
 ## Usage
-### Post-Push Hook
-Automatically mirror commits after pushing a branch:
+### Pre-Push Hook
+Automatically mirror commits before pushing a branch:
 
 ```bash
 git push origin feature-branch
 ```
 
-### Analyze All Branches
-Manually analyze all branches and mirror commits:
-
-```bash
-python analyze_all_branches.py
-```
-
 ## Security
 - Use SSH or Personal Access Tokens for private repository access.
-- Tokens should be stored as environment variables.
 
 ## Contributing
 Feel free to submit issues or pull requests to improve this tool!
