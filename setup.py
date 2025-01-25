@@ -50,15 +50,6 @@ def save_env_vars(repo_path, fake_repo_url, author_name):
     print(f"Global configuration saved to {global_config_path}.")
 
 
-def create_virtual_environment():
-    """Create and activate a virtual environment, and install dependencies."""
-    print("Creating virtual environment...")
-    subprocess.run(["python3", "-m", "venv", "venv"], check=True)
-    print("Installing dependencies...")
-    subprocess.run(["venv/bin/pip", "install", "-r", "requirements.txt"], check=True)
-    print("Virtual environment setup complete.")
-
-
 def create_fake_repo(token, original_repo_path, use_ssh=False):
     """Create a fake repository on GitHub using the API."""
     # Get the original repository's name
@@ -144,28 +135,25 @@ deactivate
 if __name__ == "__main__":
     print("Setting up Mirror Commits...")
 
-    # Step 1: Create virtual environment and install dependencies
-    create_virtual_environment()
-
-    # Step 2: Get GitHub token
+    # Step 1: Get GitHub token
     GITHUB_TOKEN = load_github_token()
     if not GITHUB_TOKEN:
         GITHUB_TOKEN = input("Enter your GitHub Personal Access Token (with 'repo' scope): ").strip()
         save_github_token(GITHUB_TOKEN)
 
-    # Step 3: Get original repo name and automatically generate the fake repo name
+    # Step 2: Get original repo name and automatically generate the fake repo name
     ORIGINAL_REPO_PATH = input("Enter the path to your original repository: ").strip()
 
-    # Step 4: Create the fake repository
+    # Step 3: Create the fake repository
     use_ssh = input("Do you want to use SSH for the fake repository? (y/n): ").strip().lower() == "y"
     FAKE_REPO_URL = create_fake_repo(GITHUB_TOKEN, ORIGINAL_REPO_PATH, use_ssh)
 
-    # Step 5: Install the Git hoaok
+    # Step 4: Install the Git hoaok
     VENV_PATH = os.path.abspath("venv")
     TOOL_REPO_PATH = os.path.abspath(os.path.dirname(__file__))  # Dynamically determine the tool's location
     install_git_hook(ORIGINAL_REPO_PATH, VENV_PATH, TOOL_REPO_PATH)
 
-    # Step 6: Save repository-specific configuration
+    # Step 5: Save repository-specific configuration
     AUTHOR_NAME = input("Enter your name (as used in your Git commits): ").strip()
     save_env_vars(ORIGINAL_REPO_PATH, FAKE_REPO_URL, AUTHOR_NAME)
 
