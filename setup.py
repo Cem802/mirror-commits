@@ -74,20 +74,30 @@ def create_fake_repo(token, original_repo_path, use_ssh=False):
         print("Failed to create or verify the repository:", response.json())
         exit(1)
 
+    # Prompt for the GitHub username if not dynamically retrieved
+    username = os.getenv("GITHUB_USERNAME")
+    if not username:
+        print("GitHub username not found in environment variables.")
+        username = input("Enter your GitHub username: ").strip()
+
     if use_ssh:
         # Get the original remote URL
         repo = git.Repo(original_repo_path)
         origin_url = repo.remotes.origin.url
 
-        # Extract SSH host and user
+        # Extract custom SSH host (e.g., github.com-Cem802)
+        custom_host = None
         if origin_url.startswith("git@"):
-            ssh_host, repo_path = origin_url.split(":", 1)
-            return f"{ssh_host}:{repo_path.replace(original_repo_name, fake_repo_name)}"
+            custom_host = origin_url.split(":")[0].split("@")[1]
+        
+        # Construct the fake repo SSH URL
+        if custom_host:
+            return f"git@{custom_host}:{username}/{fake_repo_name}.git"
         else:
-            raise ValueError("The original repository's remote is not an SSH URL.")
+            return f"git@github.com:{username}/{fake_repo_name}.git"
     else:
         # Return the HTTPS URL from the response
-        return response.json().get("clone_url")
+        return f"https://github.com/{username}/{fake_repo_name}.git"
 
 
 def install_git_hook(repo_path, venv_path, tool_repo_path):
