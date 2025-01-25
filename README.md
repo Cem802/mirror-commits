@@ -67,7 +67,12 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. To deactivate the virtual environment after usage:
+4. Run setup:
+```bash
+python setup.py
+```
+
+5. To deactivate the virtual environment after usage:
 ```bash
 deactivate
 ```
