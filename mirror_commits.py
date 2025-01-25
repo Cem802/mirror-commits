@@ -1,4 +1,6 @@
+import os
 import git
+from datetime import datetime, timezone
 
 
 def mirror_commits_for_branch(repo_path, fake_repo_path, branch_name, author_name):
@@ -18,9 +20,20 @@ def mirror_commits_for_branch(repo_path, fake_repo_path, branch_name, author_nam
 
 
 def mirror_commit(fake_repo, commit):
-    # Create a new commit in the fake repo
+    """Mirror a commit into the fake repository, preserving the original timestamp."""
+    original_date = datetime.fromtimestamp(commit.committed_date, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    
+    # Set environment variables for the commit date
+    env = os.environ.copy()
+    env["GIT_AUTHOR_DATE"] = original_date
+    env["GIT_COMMITTER_DATE"] = original_date
+
+    # Create a new commit in the fake repo with the original message and date
     fake_repo.index.commit(
-        f"Mirror Commit: {commit.message}\nOriginal Hash: {commit.hexsha}"
+        f"Mirror Commit: {commit.message}\nOriginal Hash: {commit.hexsha}",
+        author_date=original_date,
+        commit_date=original_date,
+        env=env
     )
 
 
