@@ -13,13 +13,10 @@ def mirror_commits_for_branch(repo_path, fake_repo_url, branch_name, author_name
 
     # Clone the fake repo if it doesn’t exist
     if not os.path.exists(fake_repo_local_path):
-        print(f"Cloning fake repository into {fake_repo_local_path}...")
         fake_repo = git.Repo.clone_from(fake_repo_url, fake_repo_local_path)
-        print("Clone completed.")
 
         # Ensure the fake repo has an initial commit on the default branch
         if not fake_repo.heads:
-            print(f"Creating the '{default_branch}' branch in the fake repository...")
             fake_repo.git.checkout("-b", default_branch)  # Create and switch to default branch
             fake_repo.index.commit("Initial commit")
             fake_repo.git.push("--set-upstream", "origin", default_branch)
@@ -28,33 +25,41 @@ def mirror_commits_for_branch(repo_path, fake_repo_url, branch_name, author_name
 
     # Ensure we are on the default branch in the fake repo
     if fake_repo.active_branch.name != default_branch:
-        print(f"Switching to the '{default_branch}' branch in the fake repository...")
         fake_repo.git.checkout(default_branch)
 
     # Check out the branch in the original repo
     repo = git.Repo(repo_path)
     repo.git.checkout(branch_name)
-    commits = list(repo.iter_commits(branch_name))
+
+    # Collect commit hashes that are already on the default branch so we can skip them quickly
+    default_branch_commits = set()
+    if default_branch in repo.heads:
+        default_branch_commits = {c.hexsha for c in repo.iter_commits(default_branch)}
+
+    mirrored_count = 0
 
     # Iterate through commits authored by the user
-    for commit in commits:
-        print(f"Processing commit: {commit.hexsha} - {commit.message.strip()}")
-        if author_name in commit.author.name:
-            if not is_commit_in_default_branch(repo, commit):
-                print(f"Commit {commit.hexsha} is not in the default branch.")
-            if not is_commit_in_fake_repo(fake_repo, commit):
-                print(f"Commit {commit.hexsha} is not in the fake repository.")
-                # Mirror the commit into the fake repo
-                mirror_commit(fake_repo, commit, branch_name)
+    for commit in repo.iter_commits(branch_name):
+        if author_name not in commit.author.name:
+            continue
+        if commit.hexsha in default_branch_commits:
+            continue
+        if is_commit_in_fake_repo(fake_repo, commit):
+            continue
+
+        # Mirror the commit into the fake repo
+        mirror_commit(fake_repo, commit, branch_name)
+        mirrored_count += 1
 
     # Push changes to the default branch in the remote fake repo
-    print(f"Pushing changes to the '{default_branch}' branch...")
-    fake_repo.git.push("origin", default_branch)
+    if mirrored_count:
+        fake_repo.git.push("origin", default_branch)
+
+    return mirrored_count
 
 
 def mirror_commit(fake_repo, commit, branch_name):
     """Mirror a commit into the fake repository, preserving the original timestamp and linking to the original commit."""
-    print(f"Mirroring commit: {commit.hexsha} - {commit.message.strip()}")
 
     # Format the original commit date in ISO 8601 format
     original_date = datetime.fromtimestamp(commit.committed_date, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -111,7 +116,6 @@ def mirror_commit(fake_repo, commit, branch_name):
         text=True,
     )
     if result_add.returncode != 0:
-        print(f"Error staging changes: {result_add.stderr}")
         raise Exception(f"Failed to stage changes: {result_add.stderr}")
 
     # Check if there are staged changes
@@ -121,7 +125,6 @@ def mirror_commit(fake_repo, commit, branch_name):
     )
     if result_diff.returncode == 0:
         # No changes to commit
-        print(f"No changes to commit for {commit.hexsha}. Skipping...")
         return
 
     # Commit the changes
@@ -133,22 +136,11 @@ def mirror_commit(fake_repo, commit, branch_name):
         text=True,
     )
     if result_commit.returncode != 0:
-        print(f"Error committing to fake repo: {result_commit.stderr}")
         raise Exception(f"Commit failed: {result_commit.stderr}")
-
-    print(f"Mirrored commit {commit.hexsha} to the fake repository.")
-
-
-def is_commit_in_default_branch(repo, commit):
-    # Check if the commit is in the default branch (e.g., main)
-    default_branch = repo.active_branch
-    return commit in repo.iter_commits(default_branch)
-
 
 def is_commit_in_fake_repo(fake_repo, commit):
     # Check if the commit is already mirrored in the fake repo
     for fake_commit in fake_repo.iter_commits():
         if commit.hexsha in fake_commit.message:
-            print(f"Commit {commit.hexsha} already exists in the fake repository.")
             return True
     return False
